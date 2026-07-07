@@ -5,74 +5,94 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/raw_ostream.h"
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <variant>
-
 
 class LLVMIRHandler {
 private:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
+    std::unique_ptr<llvm::SMDiagnostic> err;
 
 public:
-    explicit LLVMIRHandler(llvm::Module *module) : module(module) {}
+    // Default constructor: create a context and diagnostic object
+    LLVMIRHandler()
+        : context(std::make_unique<llvm::LLVMContext>()),
+          module(nullptr),
+          err(std::make_unique<llvm::SMDiagnostic>()) {}
 
-    explicit LLVMIRHandler(const std::string &filename) {
-        context = std::make_unique<llvm::LLVMContext>();
-        llvm::SMDiagnostic err;
-        this->module = llvm::parseIRFile(filename, err, *context);
+    // Construct from an existing module (take ownership)
+    explicit LLVMIRHandler(std::unique_ptr<llvm::Module> mod)
+        : context(std::make_unique<llvm::LLVMContext>()),
+          module(std::move(mod)),
+          err(std::make_unique<llvm::SMDiagnostic>()) {}
 
-        if (!this->module) {
-            err.print("LLVMIRHandler", llvm::errs());
-            throw std::runtime_error("Failed to parse LLVM IR file");
-        }
-    }
-
+    // Non-owning accessor
     const llvm::Module *getModule() const {
         return module.get();
     }
-    
-    static std::string getFilename(const llvm::Instruction& instruction){
-		llvm::DebugLoc debugLoc = instruction.getDebugLoc();
 
-		if (debugLoc) {  // Check if debug info exists
-			llvm::DILocation *diLoc = debugLoc.get();
-			if (diLoc) {
-				llvm::StringRef directory = diLoc->getDirectory();
-				llvm::StringRef filename = diLoc->getFilename();
-				return directory.str() + "/" + filename.str();
-			} else {
-				return std::string("");
-			}
-		} else {
-			return std::string("");
-		}
-	} 
-	
-	static std::tuple<int, int> getLineCol(const llvm::Instruction& instruction){
-		llvm::DebugLoc debugLoc = instruction.getDebugLoc();
+    llvm::Module *getModule() {
+        return module.get();
+    }
 
-		if (debugLoc) {  // Check if debug info exists
-			unsigned lineNumber = debugLoc.getLine();
-			unsigned columnNumber = debugLoc.getCol();
-			
-			return std::tuple<int, int>{static_cast<int>(lineNumber), static_cast<int>(columnNumber)};
-		} else {
-			return std::make_tuple(-1, -1);
-		}
-	}
-	
-	static std::string getCallsite(const llvm::Instruction& instruction){
-		std::string str;
-		llvm::raw_string_ostream ss(str);
-		instruction.print(ss);
+    // Load a module from an IR file into our context. Throws on failure.
+    void load_module_from_ir_file(const std::string &filename) {
+        if (!context) context = std::make_unique<llvm::LLVMContext>();
+        if (!err) err = std::make_unique<llvm::SMDiagnostic>();
 
-		return ss.str();
-	}
+        // parseIRFile returns std::unique_ptr<Module>
+        std::unique_ptr<llvm::Module> M = llvm::parseIRFile(filename, *err, *context);
+        if (!M) {
+            err->print("LLVMIRHandler", llvm::errs());
+            throw std::runtime_error("Failed to parse LLVM IR file: " + filename);
+        }
+        module = std::move(M);
+    }
+
+    // Get source filename for an instruction (directory/filename if available)
+    static std::string getFilename(const llvm::Instruction &instruction) {
+        llvm::DebugLoc debugLoc = instruction.getDebugLoc();
+        if (debugLoc) {
+            if (auto *diLoc = debugLoc.get()) { // DILocation*
+                llvm::StringRef directory = diLoc->getDirectory();
+                llvm::StringRef filename = diLoc->getFilename();
+                std::string out;
+                if (!directory.empty()) {
+                    out.reserve(directory.size() + 1 + filename.size());
+                    out += directory.str();
+                    out.push_back('/');
+                }
+                out += filename.str();
+                return out;
+            }
+        }
+        return std::string();
+    }
+
+    // Get (line, column) for an instruction's debug location, or (-1,-1)
+    static std::tuple<int, int> getLineCol(const llvm::Instruction &instruction) {
+        llvm::DebugLoc debugLoc = instruction.getDebugLoc();
+        if (debugLoc) {
+            unsigned lineNumber = debugLoc.getLine();
+            unsigned columnNumber = debugLoc.getCol();
+            return std::tuple<int, int>{static_cast<int>(lineNumber), static_cast<int>(columnNumber)};
+        }
+        return std::make_tuple(-1, -1);
+    }
+
+    // Render the instruction to a string (callsite)
+    static std::string getCallsite(const llvm::Instruction &instruction) {
+        std::string str;
+        llvm::raw_string_ostream ss(str);
+        instruction.print(ss);
+        ss.flush();
+        return str;
+    }
 };
 
 #endif // LLVM_IR_HANDLER_H

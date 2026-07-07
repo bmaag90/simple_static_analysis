@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
     }
 
     try {
-        LLVMIRHandler handler(argv[1]);
+        LLVMIRHandler handler;
+        handler.load_module_from_ir_file(argv[1]);
         const llvm::Module *module = handler.getModule();
         CallGraphBuilder builder(*module);
         Callgraph graph = builder.build();
