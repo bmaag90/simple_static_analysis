@@ -35,40 +35,46 @@ define dso_local noundef i32 @_Z1cv() #0 !dbg !25 {
 ; Function Attrs: mustprogress noinline nounwind optnone uwtable
 define dso_local noundef i32 @_Z1bv() #0 !dbg !27 {
   %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
   call void @llvm.dbg.declare(metadata ptr %1, metadata !28, metadata !DIExpression()), !dbg !29
-  %2 = call noundef i32 @_Z1dv(), !dbg !30
-  store i32 %2, ptr %1, align 4, !dbg !29
-  %3 = load i32, ptr %1, align 4, !dbg !31
-  %4 = add nsw i32 %3, 2, !dbg !32
-  ret i32 %4, !dbg !33
+  %3 = call noundef i32 @_Z1cv(), !dbg !30
+  store i32 %3, ptr %1, align 4, !dbg !29
+  call void @llvm.dbg.declare(metadata ptr %2, metadata !31, metadata !DIExpression()), !dbg !32
+  %4 = call noundef i32 @_Z1dv(), !dbg !33
+  store i32 %4, ptr %2, align 4, !dbg !32
+  %5 = load i32, ptr %1, align 4, !dbg !34
+  %6 = load i32, ptr %2, align 4, !dbg !35
+  %7 = add nsw i32 %5, %6, !dbg !36
+  %8 = add nsw i32 %7, 2, !dbg !37
+  ret i32 %8, !dbg !38
 }
 
 ; Function Attrs: mustprogress noinline nounwind optnone uwtable
-define dso_local noundef i32 @_Z1av() #0 !dbg !34 {
+define dso_local noundef i32 @_Z1av() #0 !dbg !39 {
   %1 = alloca i32, align 4
   %2 = alloca i32, align 4
-  call void @llvm.dbg.declare(metadata ptr %1, metadata !35, metadata !DIExpression()), !dbg !36
-  %3 = call noundef i32 @_Z1bv(), !dbg !37
-  store i32 %3, ptr %1, align 4, !dbg !36
-  call void @llvm.dbg.declare(metadata ptr %2, metadata !38, metadata !DIExpression()), !dbg !39
-  %4 = call noundef i32 @_Z1fv(), !dbg !40
-  store i32 %4, ptr %2, align 4, !dbg !39
-  %5 = load i32, ptr %1, align 4, !dbg !41
-  %6 = load i32, ptr %2, align 4, !dbg !42
-  %7 = add nsw i32 %5, %6, !dbg !43
-  %8 = add nsw i32 %7, 1, !dbg !44
-  ret i32 %8, !dbg !45
+  call void @llvm.dbg.declare(metadata ptr %1, metadata !40, metadata !DIExpression()), !dbg !41
+  %3 = call noundef i32 @_Z1bv(), !dbg !42
+  store i32 %3, ptr %1, align 4, !dbg !41
+  call void @llvm.dbg.declare(metadata ptr %2, metadata !43, metadata !DIExpression()), !dbg !44
+  %4 = call noundef i32 @_Z1fv(), !dbg !45
+  store i32 %4, ptr %2, align 4, !dbg !44
+  %5 = load i32, ptr %1, align 4, !dbg !46
+  %6 = load i32, ptr %2, align 4, !dbg !47
+  %7 = add nsw i32 %5, %6, !dbg !48
+  %8 = add nsw i32 %7, 1, !dbg !49
+  ret i32 %8, !dbg !50
 }
 
 ; Function Attrs: mustprogress noinline norecurse nounwind optnone uwtable
-define dso_local noundef i32 @main() #2 !dbg !46 {
+define dso_local noundef i32 @main() #2 !dbg !51 {
   %1 = alloca i32, align 4
   %2 = alloca i32, align 4
   store i32 0, ptr %1, align 4
-  call void @llvm.dbg.declare(metadata ptr %2, metadata !47, metadata !DIExpression()), !dbg !48
-  %3 = call noundef i32 @_Z1av(), !dbg !49
-  store i32 %3, ptr %2, align 4, !dbg !48
-  ret i32 0, !dbg !50
+  call void @llvm.dbg.declare(metadata ptr %2, metadata !52, metadata !DIExpression()), !dbg !53
+  %3 = call noundef i32 @_Z1av(), !dbg !54
+  store i32 %3, ptr %2, align 4, !dbg !53
+  ret i32 0, !dbg !55
 }
 
 attributes #0 = { mustprogress noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
@@ -80,7 +86,7 @@ attributes #2 = { mustprogress noinline norecurse nounwind optnone uwtable "fram
 !llvm.ident = !{!9}
 
 !0 = distinct !DICompileUnit(language: DW_LANG_C_plus_plus_14, file: !1, producer: "Ubuntu clang version 18.1.3 (1ubuntu1)", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None)
-!1 = !DIFile(filename: "example.cpp", directory: "/home/balz/Code/static_analysis/example", checksumkind: CSK_MD5, checksum: "5295dc6807804e2b9d12f279b5bdf6c2")
+!1 = !DIFile(filename: "example.cpp", directory: "/home/balz/Code/static_analysis/example", checksumkind: CSK_MD5, checksum: "a0fffa73848e344a485d28f5a6080756")
 !2 = !{i32 7, !"Dwarf Version", i32 5}
 !3 = !{i32 2, !"Debug Info Version", i32 3}
 !4 = !{i32 1, !"wchar_size", i32 4}
@@ -107,26 +113,31 @@ attributes #2 = { mustprogress noinline norecurse nounwind optnone uwtable "fram
 !25 = distinct !DISubprogram(name: "c", linkageName: "_Z1cv", scope: !1, file: !1, line: 14, type: !11, scopeLine: 14, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
 !26 = !DILocation(line: 15, column: 5, scope: !25)
 !27 = distinct !DISubprogram(name: "b", linkageName: "_Z1bv", scope: !1, file: !1, line: 18, type: !11, scopeLine: 18, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !18)
-!28 = !DILocalVariable(name: "rd", scope: !27, file: !1, line: 19, type: !13)
-!29 = !DILocation(line: 19, column: 9, scope: !27)
-!30 = !DILocation(line: 19, column: 14, scope: !27)
-!31 = !DILocation(line: 20, column: 12, scope: !27)
-!32 = !DILocation(line: 20, column: 15, scope: !27)
-!33 = !DILocation(line: 20, column: 5, scope: !27)
-!34 = distinct !DISubprogram(name: "a", linkageName: "_Z1av", scope: !1, file: !1, line: 23, type: !11, scopeLine: 23, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !18)
-!35 = !DILocalVariable(name: "rb", scope: !34, file: !1, line: 24, type: !13)
-!36 = !DILocation(line: 24, column: 9, scope: !34)
-!37 = !DILocation(line: 24, column: 14, scope: !34)
-!38 = !DILocalVariable(name: "rf", scope: !34, file: !1, line: 25, type: !13)
-!39 = !DILocation(line: 25, column: 9, scope: !34)
-!40 = !DILocation(line: 25, column: 14, scope: !34)
-!41 = !DILocation(line: 26, column: 12, scope: !34)
-!42 = !DILocation(line: 26, column: 17, scope: !34)
-!43 = !DILocation(line: 26, column: 15, scope: !34)
-!44 = !DILocation(line: 26, column: 20, scope: !34)
-!45 = !DILocation(line: 26, column: 5, scope: !34)
-!46 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 29, type: !11, scopeLine: 29, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !18)
-!47 = !DILocalVariable(name: "r", scope: !46, file: !1, line: 30, type: !13)
-!48 = !DILocation(line: 30, column: 9, scope: !46)
-!49 = !DILocation(line: 30, column: 13, scope: !46)
-!50 = !DILocation(line: 31, column: 5, scope: !46)
+!28 = !DILocalVariable(name: "rc", scope: !27, file: !1, line: 19, type: !13)
+!29 = !DILocation(line: 19, column: 6, scope: !27)
+!30 = !DILocation(line: 19, column: 11, scope: !27)
+!31 = !DILocalVariable(name: "rd", scope: !27, file: !1, line: 20, type: !13)
+!32 = !DILocation(line: 20, column: 9, scope: !27)
+!33 = !DILocation(line: 20, column: 14, scope: !27)
+!34 = !DILocation(line: 21, column: 12, scope: !27)
+!35 = !DILocation(line: 21, column: 17, scope: !27)
+!36 = !DILocation(line: 21, column: 15, scope: !27)
+!37 = !DILocation(line: 21, column: 20, scope: !27)
+!38 = !DILocation(line: 21, column: 5, scope: !27)
+!39 = distinct !DISubprogram(name: "a", linkageName: "_Z1av", scope: !1, file: !1, line: 24, type: !11, scopeLine: 24, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !18)
+!40 = !DILocalVariable(name: "rb", scope: !39, file: !1, line: 25, type: !13)
+!41 = !DILocation(line: 25, column: 9, scope: !39)
+!42 = !DILocation(line: 25, column: 14, scope: !39)
+!43 = !DILocalVariable(name: "rf", scope: !39, file: !1, line: 26, type: !13)
+!44 = !DILocation(line: 26, column: 9, scope: !39)
+!45 = !DILocation(line: 26, column: 14, scope: !39)
+!46 = !DILocation(line: 27, column: 12, scope: !39)
+!47 = !DILocation(line: 27, column: 17, scope: !39)
+!48 = !DILocation(line: 27, column: 15, scope: !39)
+!49 = !DILocation(line: 27, column: 20, scope: !39)
+!50 = !DILocation(line: 27, column: 5, scope: !39)
+!51 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 30, type: !11, scopeLine: 30, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !18)
+!52 = !DILocalVariable(name: "r", scope: !51, file: !1, line: 31, type: !13)
+!53 = !DILocation(line: 31, column: 9, scope: !51)
+!54 = !DILocation(line: 31, column: 13, scope: !51)
+!55 = !DILocation(line: 32, column: 5, scope: !51)

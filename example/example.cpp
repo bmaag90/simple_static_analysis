@@ -16,8 +16,9 @@ int c(){
 }
 
 int b() {
+	int rc = c();
     int rd = d();
-    return rd + 2;
+    return rc + rd + 2;
 }
 
 int a() {

@@ -46,7 +46,7 @@ target_link_libraries(libssa
 target_compile_features(libssa PUBLIC cxx_std_20)
 
 add_executable(app_callgraph
-    apps/callgraph.cpp
+    apps/app_callgraph.cpp
 )
 
 target_link_libraries(app_callgraph

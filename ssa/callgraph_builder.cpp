@@ -23,9 +23,10 @@ Callgraph CallGraphBuilder::build() const {
             continue;
         }
 		
-        graph.addNode(CallgraphNode(nodeId++, function.getName().str()));
+        graph.addNode(CallgraphNode(nodeId, function.getName().str()));
         spdlog::debug("NodeID {0} - {1}", nodeId, function.getName().str());
         nameToId[function.getName().str()] = nodeId;
+        nodeId++;
     }
 	spdlog::debug("=== Adding edges to graph ===");
     for (const llvm::Function &function : module) {

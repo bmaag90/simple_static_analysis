@@ -33,6 +33,11 @@ int main(int argc, char **argv) {
                 std::cout << edge.getSource().getId() << " -> " << edge.getTarget().getId() << "\n";
             }
         }
+        
+        printf("===\n");
+        graph.print_dot_graph();
+        printf("\n===\n");
+        
     } catch (const std::exception &ex) {
         std::cerr << ex.what() << "\n";
         return 1;

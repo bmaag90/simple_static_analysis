@@ -32,6 +32,10 @@ class CallgraphEdge : public Edge {
         CallgraphEdge() : Edge(Node(), Node()), callSite(""), filename(""), lineCol({-1,-1}) {}
         CallgraphEdge(const Node &source, const Node &target, const std::string &callSite = "", std::string filename = "", std::tuple<int,int> lineCol = {-1, -1})
             : Edge(source, target), callSite(callSite), filename(filename), lineCol(lineCol) {}
+            
+        std::string& getCallSite(){
+			return callSite;
+		}
 };
 
 class Callgraph {
@@ -60,6 +64,19 @@ class Callgraph {
         const std::unordered_map<NodeId, std::vector<CallgraphEdge>>& getEdges() const {
             return edges;
         }
+        
+        const void print_dot_graph()  {
+			printf("digraph {\n");
+			for (auto [nodeId, node] : nodes){
+				printf("\t%u [shape=box, label=\"{%s}\"]\n", nodeId, node.getFunctionName().c_str());
+			}
+			for (auto [nodeId, out_edges]: edges){
+				for (auto edge : out_edges){
+					printf("\t%u -> %u [label=\"{%s}\"]\n", edge.getSource().getId(), edge.getTarget().getId(), edge.getCallSite().c_str());
+				}
+			}
+			printf("}");
+		}
 };
 
 #endif // CALLGRAPH_H
