@@ -1,5 +1,5 @@
-; ModuleID = 'example.cpp'
-source_filename = "example.cpp"
+; ModuleID = 'nested_calls.cpp'
+source_filename = "nested_calls.cpp"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
@@ -86,7 +86,7 @@ attributes #2 = { mustprogress noinline norecurse nounwind optnone uwtable "fram
 !llvm.ident = !{!9}
 
 !0 = distinct !DICompileUnit(language: DW_LANG_C_plus_plus_14, file: !1, producer: "Ubuntu clang version 18.1.3 (1ubuntu1)", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None)
-!1 = !DIFile(filename: "example.cpp", directory: "/home/balz/Code/static_analysis/example", checksumkind: CSK_MD5, checksum: "a0fffa73848e344a485d28f5a6080756")
+!1 = !DIFile(filename: "nested_calls.cpp", directory: "/home/balz/Code/static_analysis/examples/nested_calls", checksumkind: CSK_MD5, checksum: "a0fffa73848e344a485d28f5a6080756")
 !2 = !{i32 7, !"Dwarf Version", i32 5}
 !3 = !{i32 2, !"Debug Info Version", i32 3}
 !4 = !{i32 1, !"wchar_size", i32 4}
