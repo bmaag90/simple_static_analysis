@@ -45,7 +45,7 @@ Callgraph CallGraphBuilder::build() const {
                         if (!callee->isDeclaration()) {
                             const NodeId targetId = nameToId[callee->getName().str()];
 							
-							spdlog::debug("Found call in {0}: {1}", sourceId, targetId);	
+							spdlog::debug("Call in node {0} to node {1}", sourceId, targetId);	
 							std::string strCallsite = LLVMIRHandler::getCallsite(instruction);
 							spdlog::debug("\tCallsite: {0}", strCallsite);
 							std::string filename = LLVMIRHandler::getFilename(instruction);
@@ -58,7 +58,6 @@ Callgraph CallGraphBuilder::build() const {
                                 strCallsite,
                                 filename,
                                 {numLine, numCol}));
-                            spdlog::debug("{0} -> {1}: {2}", sourceId, targetId, strCallsite);
                         }
                     }
                 }

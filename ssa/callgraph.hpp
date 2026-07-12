@@ -36,6 +36,22 @@ class CallgraphEdge : public Edge {
         std::string& getCallSite(){
 			return callSite;
 		}
+		
+		std::string getFilename(){
+			return filename;
+		}
+		
+		std::tuple<std::optional<unsigned>,std::optional<unsigned>> getLineCol(){
+			return lineCol;
+		}
+		
+		std::optional<unsigned> getLine(){
+			return std::get<0>(lineCol);
+		}
+		
+		std::optional<unsigned> getCol(){
+			return std::get<1>(lineCol);
+		}
 };
 
 class Callgraph {
@@ -72,7 +88,13 @@ class Callgraph {
 			}
 			for (auto [nodeId, out_edges]: edges){
 				for (auto edge : out_edges){
-					printf("\t%u -> %u [label=\"{%s}\"]\n", edge.getSource().getId(), edge.getTarget().getId(), edge.getCallSite().c_str());
+					printf("\t%u -> %u [label=\"{%s};{%s:%d,%d}\"]\n", 
+						edge.getSource().getId(), 
+						edge.getTarget().getId(), 
+						edge.getCallSite().c_str(),
+						edge.getFilename().c_str(),
+						(int)edge.getLine().value_or(-1),
+						(int)edge.getCol().value_or(-1));
 				}
 			}
 			printf("}");
