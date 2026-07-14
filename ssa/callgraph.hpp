@@ -7,6 +7,7 @@
 #include <vector>
 #include <tuple>
 #include <optional>
+#include <memory>
 
 class CallgraphNode : public Node {
     private:
@@ -54,50 +55,47 @@ class CallgraphEdge : public Edge {
 		}
 };
 
-using NodesById = std::unordered_map<NodeId, const CallgraphNode*> ;
-using NodesByName = std::unordered_map<std::string, const CallgraphNode*>;
-using Edges = std::unordered_map<NodeId, std::vector<const CallgraphEdge*>>;
+using CallgraphNodesById = std::unordered_map<NodeId, std::unique_ptr<CallgraphNode>>;
+using CallgraphNodesByName = std::unordered_map<std::string, CallgraphNode*>;
+using CallgraphEdges = std::unordered_map<NodeId, std::vector<std::unique_ptr<CallgraphEdge>>>;
 
 class Callgraph {
     private:
-        // Each node in the call graph is uniquely identified by its NodeId
-        NodesById nodesById;
-        NodesByName nodesByName;
-        // Each source node maps to a vector of edges representing calls to target nodes
-        // at different call sites. This allows for multiple edges from the same source to the same target.
-        // i.e. multiple calls from the same function to another function at different call sites.
-        Edges edges;
+        CallgraphNodesById nodesById;
+        CallgraphNodesByName nodesByName;  // Non-owning pointers
+        CallgraphEdges edges;
 
     public:
         
-        void addNode(const CallgraphNode *node) {
-            nodesById.insert({node->getId(), node});
-            nodesByName.insert({node->getFunctionName(), node});
+        void addNode(std::unique_ptr<CallgraphNode> node) {
+            CallgraphNode* nodePtr = node.get();
+            nodesById.insert({node->getId(), std::move(node)});
+            nodesByName.insert({nodePtr->getFunctionName(), nodePtr});
         }
 
-        void addEdge(const CallgraphEdge* edge) {
-            edges[edge->getSource()->getId()].push_back(edge);
+        void addEdge(std::unique_ptr<CallgraphEdge> edge) {
+            edges[edge->getSource()->getId()].push_back(std::move(edge));
         }
 
-        const NodesById& getNodesById() const {
+        const CallgraphNodesById& getNodesById() const {
             return nodesById;
         }
 
-		const NodesByName& getNodesByName() const {
+		const CallgraphNodesByName& getNodesByName() const {
             return nodesByName;
         }
 
-        const Edges& getEdges() const {
+        const CallgraphEdges& getEdges() const {
             return edges;
         }
         
         void print_dot_graph() const {
 			printf("digraph {\n");
-			for (auto [nodeId, node] : nodesById){
+			for (auto& [nodeId, node] : nodesById){
 				printf("\t%u [shape=box, label=\"{%s}\"]\n", nodeId, node->getFunctionName().c_str());
 			}
-			for (auto [nodeId, out_edges]: edges){
-				for (auto edge : out_edges){
+			for (auto& [nodeId, out_edges]: edges){
+				for (auto& edge : out_edges){
 					printf("\t%u -> %u [label=\"{%s};{%s:%d,%d}\"]\n", 
 						edge->getSource()->getId(), 
 						edge->getTarget()->getId(), 

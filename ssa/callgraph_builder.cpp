@@ -12,7 +12,7 @@ CallGraphBuilder::CallGraphBuilder(const llvm::Module &module)
 
 CallGraphBuilder::CallGraphBuilder(const LLVMIRHandler &handler)
     : module(*handler.getModule()) {}
-
+    
 Callgraph CallGraphBuilder::build() const {
     Callgraph graph;
 	std::unordered_map<std::string, NodeId> nameToId;
@@ -23,7 +23,7 @@ Callgraph CallGraphBuilder::build() const {
             continue;
         }
 		
-        graph.addNode(new CallgraphNode(nodeId, function.getName().str()));
+        graph.addNode(std::make_unique<CallgraphNode>(nodeId, function.getName().str()));
         spdlog::debug("NodeID {0} - {1}", nodeId, function.getName().str());
         nodeId++;
     }
@@ -51,12 +51,12 @@ Callgraph CallGraphBuilder::build() const {
 							spdlog::debug("\tFilename: {0}", filename);
 							auto [numLine, numCol] = LLVMIRHandler::getLineCol(instruction);
 							spdlog::debug("\tLine-Col: {0}, {1}", numLine, numCol);
-                            graph.addEdge(new CallgraphEdge(
+                            graph.addEdge(std::make_unique<CallgraphEdge>(
                                 sourceNode,
                                 targetNode,
                                 strCallsite,
                                 filename,
-                                {numLine, numCol}));
+                                std::make_tuple(numLine, numCol)));
                         }
                     }
                 }

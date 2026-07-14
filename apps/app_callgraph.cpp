@@ -23,13 +23,13 @@ int main(int argc, char **argv) {
 
         std::cout << "Nodes:\n";
         for (const auto &entry : graph.getNodesById()) {
-            const CallgraphNode* node = entry.second;
+            const CallgraphNode* node = entry.second.get();
             std::cout << "- " << node->getId() << ": " << node->getFunctionName() << "\n";
         }
 
         std::cout << "\nEdges:\n";
         for (const auto &entry : graph.getEdges()) {
-            for (const CallgraphEdge* edge : entry.second) {
+            for (const auto &edge : entry.second) {
                 std::cout << edge->getSource()->getId() << " -> " << edge->getTarget()->getId() << "\n";
             }
         }
