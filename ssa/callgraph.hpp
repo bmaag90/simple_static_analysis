@@ -29,72 +29,82 @@ class CallgraphEdge : public Edge {
 		std::tuple<std::optional<unsigned>,std::optional<unsigned>> lineCol;
 		std::string filename;
     public:
-        CallgraphEdge() : Edge(Node(), Node()), callSite(""), filename(""), lineCol({-1,-1}) {}
-        CallgraphEdge(const Node &source, const Node &target, const std::string &callSite = "", std::string filename = "", std::tuple<int,int> lineCol = {-1, -1})
+        CallgraphEdge() : Edge(nullptr, nullptr), callSite(""), filename(""), lineCol({-1,-1}) {}
+        CallgraphEdge(const Node* source, const Node* target, const std::string &callSite = "", std::string filename = "", std::tuple<int,int> lineCol = {-1, -1})
             : Edge(source, target), callSite(callSite), filename(filename), lineCol(lineCol) {}
             
-        std::string& getCallSite(){
+        const std::string& getCallSite() const {
 			return callSite;
 		}
 		
-		std::string getFilename(){
+		const std::string getFilename() const {
 			return filename;
 		}
 		
-		std::tuple<std::optional<unsigned>,std::optional<unsigned>> getLineCol(){
+		const std::tuple<std::optional<unsigned>,std::optional<unsigned>> getLineCol() const {
 			return lineCol;
 		}
 		
-		std::optional<unsigned> getLine(){
+		const std::optional<unsigned> getLine() const {
 			return std::get<0>(lineCol);
 		}
 		
-		std::optional<unsigned> getCol(){
+		const std::optional<unsigned> getCol() const {
 			return std::get<1>(lineCol);
 		}
 };
 
+using NodesById = std::unordered_map<NodeId, const CallgraphNode*> ;
+using NodesByName = std::unordered_map<std::string, const CallgraphNode*>;
+using Edges = std::unordered_map<NodeId, std::vector<const CallgraphEdge*>>;
+
 class Callgraph {
     private:
         // Each node in the call graph is uniquely identified by its NodeId
-        std::unordered_map<NodeId, CallgraphNode> nodes;
+        NodesById nodesById;
+        NodesByName nodesByName;
         // Each source node maps to a vector of edges representing calls to target nodes
         // at different call sites. This allows for multiple edges from the same source to the same target.
         // i.e. multiple calls from the same function to another function at different call sites.
-        std::unordered_map<NodeId, std::vector<CallgraphEdge>> edges;
+        Edges edges;
 
     public:
         
-        void addNode(const CallgraphNode &node) {
-            nodes[node.getId()] = node;
+        void addNode(const CallgraphNode *node) {
+            nodesById.insert({node->getId(), node});
+            nodesByName.insert({node->getFunctionName(), node});
         }
 
-        void addEdge(const CallgraphEdge &edge) {
-            edges[edge.getSource().getId()].push_back(edge);
+        void addEdge(const CallgraphEdge* edge) {
+            edges[edge->getSource()->getId()].push_back(edge);
         }
 
-        const std::unordered_map<NodeId, CallgraphNode>& getNodes() const {
-            return nodes;
+        const NodesById& getNodesById() const {
+            return nodesById;
         }
 
-        const std::unordered_map<NodeId, std::vector<CallgraphEdge>>& getEdges() const {
+		const NodesByName& getNodesByName() const {
+            return nodesByName;
+        }
+
+        const Edges& getEdges() const {
             return edges;
         }
         
-        const void print_dot_graph()  {
+        void print_dot_graph() const {
 			printf("digraph {\n");
-			for (auto [nodeId, node] : nodes){
-				printf("\t%u [shape=box, label=\"{%s}\"]\n", nodeId, node.getFunctionName().c_str());
+			for (auto [nodeId, node] : nodesById){
+				printf("\t%u [shape=box, label=\"{%s}\"]\n", nodeId, node->getFunctionName().c_str());
 			}
 			for (auto [nodeId, out_edges]: edges){
 				for (auto edge : out_edges){
 					printf("\t%u -> %u [label=\"{%s};{%s:%d,%d}\"]\n", 
-						edge.getSource().getId(), 
-						edge.getTarget().getId(), 
-						edge.getCallSite().c_str(),
-						edge.getFilename().c_str(),
-						(int)edge.getLine().value_or(-1),
-						(int)edge.getCol().value_or(-1));
+						edge->getSource()->getId(), 
+						edge->getTarget()->getId(), 
+						edge->getCallSite().c_str(),
+						edge->getFilename().c_str(),
+						(int)edge->getLine().value_or(-1),
+						(int)edge->getCol().value_or(-1));
 				}
 			}
 			printf("}");

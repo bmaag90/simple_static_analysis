@@ -23,9 +23,8 @@ Callgraph CallGraphBuilder::build() const {
             continue;
         }
 		
-        graph.addNode(CallgraphNode(nodeId, function.getName().str()));
+        graph.addNode(new CallgraphNode(nodeId, function.getName().str()));
         spdlog::debug("NodeID {0} - {1}", nodeId, function.getName().str());
-        nameToId[function.getName().str()] = nodeId;
         nodeId++;
     }
 	spdlog::debug("=== Adding edges to graph ===");
@@ -34,7 +33,7 @@ Callgraph CallGraphBuilder::build() const {
             continue;
         }
 
-        const NodeId sourceId = nameToId[function.getName().str()];
+        const Node* sourceNode = graph.getNodesByName().at(function.getName().str());
 		
         for (const llvm::BasicBlock &block : function) {
             for (const llvm::Instruction &instruction : block) {
@@ -43,18 +42,18 @@ Callgraph CallGraphBuilder::build() const {
                 if (const auto *call = llvm::dyn_cast<llvm::CallBase>(&instruction)) {
                     if (const llvm::Function *callee = call->getCalledFunction()) {
                         if (!callee->isDeclaration()) {
-                            const NodeId targetId = nameToId[callee->getName().str()];
+                            const Node* targetNode = graph.getNodesByName().at(callee->getName().str());
 							
-							spdlog::debug("Call in node {0} to node {1}", sourceId, targetId);	
-							std::string strCallsite = LLVMIRHandler::getCallsite(instruction);
+							spdlog::debug("Call in node {0} to node {1}", sourceNode->getId(), targetNode->getId());	
+							std::string strCallsite = LLVMIRHandler::printInstruction(instruction);
 							spdlog::debug("\tCallsite: {0}", strCallsite);
 							std::string filename = LLVMIRHandler::getFilename(instruction);
 							spdlog::debug("\tFilename: {0}", filename);
 							auto [numLine, numCol] = LLVMIRHandler::getLineCol(instruction);
 							spdlog::debug("\tLine-Col: {0}, {1}", numLine, numCol);
-                            graph.addEdge(CallgraphEdge(
-                                Node(sourceId),
-                                Node(targetId),
+                            graph.addEdge(new CallgraphEdge(
+                                sourceNode,
+                                targetNode,
                                 strCallsite,
                                 filename,
                                 {numLine, numCol}));

@@ -22,15 +22,15 @@ int main(int argc, char **argv) {
         Callgraph graph = builder.build();
 
         std::cout << "Nodes:\n";
-        for (const auto &entry : graph.getNodes()) {
-            const CallgraphNode &node = entry.second;
-            std::cout << "- " << node.getId() << ": " << node.getFunctionName() << "\n";
+        for (const auto &entry : graph.getNodesById()) {
+            const CallgraphNode* node = entry.second;
+            std::cout << "- " << node->getId() << ": " << node->getFunctionName() << "\n";
         }
 
         std::cout << "\nEdges:\n";
         for (const auto &entry : graph.getEdges()) {
-            for (const CallgraphEdge &edge : entry.second) {
-                std::cout << edge.getSource().getId() << " -> " << edge.getTarget().getId() << "\n";
+            for (const CallgraphEdge* edge : entry.second) {
+                std::cout << edge->getSource()->getId() << " -> " << edge->getTarget()->getId() << "\n";
             }
         }
         

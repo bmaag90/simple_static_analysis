@@ -1,7 +1,7 @@
 #ifndef BASE_H
 #define BASE_H
 
-typedef unsigned int NodeId;
+using NodeId = unsigned int;
 
 class Node {
     private:
@@ -26,17 +26,17 @@ class Node {
 
 class Edge {
     private:
-        Node source;
-        Node target;
+        const Node* source;
+        const Node* target;
 
     public:
-        Edge(const Node &source, const Node &target) : source(source), target(target) {}
+        Edge(const Node* source, const Node* target) : source(source), target(target) {}
 
-        const Node& getSource() const {
+        const Node* getSource() const {
             return source;
         }
 
-        const Node& getTarget() const {
+        const Node* getTarget() const {
             return target;
         }
 };

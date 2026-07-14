@@ -86,7 +86,7 @@ public:
     }
 
     // Render the instruction to a string (callsite)
-    static std::string getCallsite(const llvm::Instruction &instruction) {
+    static std::string printInstruction(const llvm::Instruction &instruction) {
         std::string str;
         llvm::raw_string_ostream ss(str);
         instruction.print(ss);
