@@ -28,6 +28,7 @@ set(PLATFORM_LIBS $<$<BOOL:${MINGW}>:ws2_32>)
 
 add_library(libssa
     ssa/callgraph_builder.cpp
+	ssa/control_flow_graph_builder.cpp
 )
 
 target_include_directories(libssa
@@ -50,6 +51,17 @@ add_executable(app_callgraph
 )
 
 target_link_libraries(app_callgraph
+    PRIVATE
+        libssa
+        spdlog::spdlog
+        ${PLATFORM_LIBS}
+)
+
+add_executable(app_control_flow_graph
+    apps/app_control_flow_graph.cpp
+)
+
+target_link_libraries(app_control_flow_graph
     PRIVATE
         libssa
         spdlog::spdlog
