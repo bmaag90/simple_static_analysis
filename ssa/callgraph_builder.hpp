@@ -7,14 +7,15 @@
 #include <llvm/IR/Module.h>
 
 class CallGraphBuilder {
-public:
-    explicit CallGraphBuilder(const llvm::Module &module);
-    explicit CallGraphBuilder(const LLVMIRHandler &handler);
-
-    Callgraph build() const;
-
 private:
     const llvm::Module &module;
+	Callgraph& cg;
+	
+public:
+    explicit CallGraphBuilder(const llvm::Module &module, Callgraph& cg);
+    explicit CallGraphBuilder(const LLVMIRHandler &handler, Callgraph& cg);
+
+    void build();
 };
 
 #endif // CALLGRAPH_BUILDER_PUBLIC_H

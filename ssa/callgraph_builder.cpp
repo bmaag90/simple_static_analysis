@@ -7,33 +7,34 @@
 #include "spdlog/spdlog.h"
 
 
-CallGraphBuilder::CallGraphBuilder(const llvm::Module &module)
-    : module(module) {}
+CallGraphBuilder::CallGraphBuilder(const llvm::Module &module, Callgraph& cg)
+    : module(module), cg(cg) {}
 
-CallGraphBuilder::CallGraphBuilder(const LLVMIRHandler &handler)
-    : module(*handler.getModule()) {}
+CallGraphBuilder::CallGraphBuilder(const LLVMIRHandler &handler, Callgraph& cg)
+    : module(*handler.getModule()), cg(cg) {}
     
-Callgraph CallGraphBuilder::build() const {
-    Callgraph graph;
+void CallGraphBuilder::build() {
 	std::unordered_map<std::string, NodeId> nameToId;
+	std::unique_ptr<CallgraphNode> node;
+	std::unique_ptr<CallgraphEdge> edge;
 	spdlog::debug("=== Adding nodes to graph ===");
     std::size_t nodeId = 0;
     for (const llvm::Function &function : module) {
         if (function.isDeclaration()) {
             continue;
         }
-		
-        graph.addNode(std::make_unique<CallgraphNode>(nodeId, function.getName().str()));
+		node = std::make_unique<CallgraphNode>(nodeId, function.getName().str());
+        cg.addNode(std::move(node));
         spdlog::debug("NodeID {0} - {1}", nodeId, function.getName().str());
         nodeId++;
     }
-	spdlog::debug("=== Adding edges to graph ===");
+	spdlog::debug("=== Adding edges to call graph ===");
     for (const llvm::Function &function : module) {
         if (function.isDeclaration()) {
             continue;
         }
 
-        const Node* sourceNode = graph.getNodesByName().at(function.getName().str());
+        const Node* sourceNode = cg.getNodesByName().at(function.getName().str());
 		
         for (const llvm::BasicBlock &block : function) {
             for (const llvm::Instruction &instruction : block) {
@@ -42,7 +43,7 @@ Callgraph CallGraphBuilder::build() const {
                 if (const auto *call = llvm::dyn_cast<llvm::CallBase>(&instruction)) {
                     if (const llvm::Function *callee = call->getCalledFunction()) {
                         if (!callee->isDeclaration()) {
-                            const Node* targetNode = graph.getNodesByName().at(callee->getName().str());
+                            const Node* targetNode = cg.getNodesByName().at(callee->getName().str());
 							
 							spdlog::debug("Call in node {0} to node {1}", sourceNode->getId(), targetNode->getId());	
 							std::string strCallsite = LLVMIRHandler::printInstruction(instruction);
@@ -51,12 +52,13 @@ Callgraph CallGraphBuilder::build() const {
 							spdlog::debug("\tFilename: {0}", filename);
 							auto [numLine, numCol] = LLVMIRHandler::getLineCol(instruction);
 							spdlog::debug("\tLine-Col: {0}, {1}", numLine, numCol);
-                            graph.addEdge(std::make_unique<CallgraphEdge>(
+							edge = std::make_unique<CallgraphEdge>(
                                 sourceNode,
                                 targetNode,
                                 strCallsite,
                                 filename,
-                                std::make_tuple(numLine, numCol)));
+                                std::make_tuple(numLine, numCol));
+                            cg.addEdge(std::move(edge));
                         }
                     }
                 }
@@ -64,5 +66,4 @@ Callgraph CallGraphBuilder::build() const {
         }
     }  
 
-    return graph;
 }

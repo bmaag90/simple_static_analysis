@@ -18,9 +18,11 @@ int main(int argc, char **argv) {
         LLVMIRHandler handler;
         handler.load_module_from_ir_file(argv[1]);
         const llvm::Module *module = handler.getModule();
-        CallGraphBuilder builder(*module);
-        Callgraph graph = builder.build();
-
+        
+        Callgraph graph;
+		CallGraphBuilder builder(*module, graph);
+		builder.build();
+		
         std::cout << "Nodes:\n";
         for (const auto &entry : graph.getNodesById()) {
             const CallgraphNode* node = entry.second.get();
