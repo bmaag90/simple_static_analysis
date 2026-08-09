@@ -24,22 +24,24 @@ void ControlFlowGraphBuilder::build() {
 	
 	// add nodes and edges within blocks
 	for (const llvm::Function &function : module) {
+		spdlog::debug("=== Function : {} ===", function.getName().str());
 		for (const llvm::BasicBlock &block : function) {
-			spdlog::debug("= Basic Block =");
-			spdlog::debug("Name: {0}", block.getName());
+			spdlog::debug("\t= Basic Block =");
+			spdlog::debug("\tName: {0}", block.getName());
 			int i = 0;
             for (const llvm::Instruction &instruction : block) {
-				spdlog::debug("Instruction: {0}", LLVMIRHandler::printInstruction(instruction));	
+				spdlog::debug("\t\tInstruction: {0}", LLVMIRHandler::printInstruction(instruction));	
 				
 				if (auto* callInstr = llvm::dyn_cast<llvm::CallBase>(&instruction)) {
-					spdlog::debug("-> is callsite");
+					spdlog::debug("\t\t-> is callsite");
 					callsites.push_back(&instruction);
 				} else if (auto* retInstr = llvm::dyn_cast<llvm::ReturnInst>(&instruction)) {
-					spdlog::debug("-> is return statement");
+					spdlog::debug("\t\t-> is return statement");
 					return_statements.push_back(&instruction);
 				}				
 				
 				node = std::make_unique<ControlFlowGraphNode>(curNodeId, &instruction);	
+				spdlog::debug("\t\tContext: {0}", instruction.getParent()->getParent()->getName().str());
 				cfg.addNode(std::move(node));
 				
 				if (i != 0) {
@@ -75,22 +77,50 @@ void ControlFlowGraphBuilder::build() {
 	for (const llvm::Instruction *instruction : callsites){
 		const auto *callsite = llvm::dyn_cast<llvm::CallBase>(instruction);
 		if (const llvm::Function *callee = callsite->getCalledFunction()) {
-			if (!callee->isDeclaration()) {
-				if (!callee->empty()) {
-					const llvm::Instruction* firstInstr = &callee->front().front();
-					const ControlFlowGraphNode* sourceNode = cfg.getNode(instruction);
-					const ControlFlowGraphNode* targetNode = cfg.getNode(firstInstr);
-					
-					if ((sourceNode != nullptr) & (targetNode != nullptr)){
-						edge = std::make_unique<ControlFlowGraphEdge>(sourceNode, targetNode);
-						cfg.addEdge(std::move(edge));
-					} else {
-						spdlog::debug("No source and target node found for call");
-					}
-					
-				}									
-			}
+			if (callee && !callee->isDeclaration() && !callee->empty()) {
+				const llvm::Instruction* firstInstr = &callee->front().front();
+				const ControlFlowGraphNode* sourceNode = cfg.getNode(instruction);
+				const ControlFlowGraphNode* targetNode = cfg.getNode(firstInstr);
+				
+				if ((sourceNode != nullptr) & (targetNode != nullptr)){
+					edge = std::make_unique<ControlFlowGraphEdge>(sourceNode, targetNode);
+					cfg.addEdge(std::move(edge));
+				} else {
+					spdlog::debug("No source and target node found for call");
+				}
+				
+			}									
 		}
 	}
 	
+	// connect returns to call sites (interprocedural return edges)
+	for (const llvm::Instruction *callInstr : callsites) {
+		const auto *callsite = llvm::dyn_cast<llvm::CallBase>(callInstr);
+		const llvm::Function *callee = callsite->getCalledFunction();
+		
+		if (callee && !callee->isDeclaration() && !callee->empty()) {
+			// Get instruction after the call
+			auto it = llvm::cast<llvm::Instruction>(callInstr)->getIterator();
+			++it;
+			
+			if (it != callInstr->getParent()->end()) {
+				const llvm::Instruction* nextInstr = &*it;
+				const ControlFlowGraphNode* nextNode = cfg.getNode(nextInstr);
+				
+				// Connect all returns in this callee to the next instruction
+				for (const llvm::Instruction *returnInstr : return_statements) {
+					const llvm::Function* returnFunc = llvm::cast<llvm::Instruction>(returnInstr)->getParent()->getParent();
+					
+					if (returnFunc == callee) {
+						const ControlFlowGraphNode* retNode = cfg.getNode(returnInstr);
+						
+						if ((retNode != nullptr) && (nextNode != nullptr)) {
+							edge = std::make_unique<ControlFlowGraphEdge>(retNode, nextNode);
+							cfg.addEdge(std::move(edge));
+						}
+					}
+				}
+			}
+		}
+	}
 }

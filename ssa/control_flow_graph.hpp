@@ -9,16 +9,26 @@
 class ControlFlowGraphNode : public Node {
 	private:
 		const llvm::Instruction* instruction;
-
+		const llvm::Function* function; 
+		
 	public:
 		ControlFlowGraphNode() = delete;
 		ControlFlowGraphNode(NodeId id, const llvm::Instruction* instruction)
-			: Node(id), instruction(instruction) {}
+			: Node(id), instruction(instruction),
+			  function(instruction->getParent()->getParent()) {}
 
 		const llvm::Instruction* getInstruction() const {
 			return instruction;
 		}
-};
+		
+		const llvm::Function* getFunction() const {
+			return function;
+		}
+		
+		std::string getFunctionName() const {
+			return function->getName().str();
+		}
+	};
 
 class ControlFlowGraphEdge : public Edge {
 	
@@ -74,7 +84,11 @@ class ControlFlowGraph {
         void print_dot_graph() const {
 			printf("digraph {\n");
 			for (auto& [nodeId, node] : nodes){
-				printf("\t%u [shape=box, label=\"{%s}\"]\n", nodeId, LLVMIRHandler::printInstruction(*(node->getInstruction())).c_str());
+				printf("\t%u [shape=box, label=\"{%s; %s}\"]\n", 
+					nodeId, 
+					LLVMIRHandler::printInstruction(*(node->getInstruction())).c_str(),
+					node->getFunctionName().c_str()
+					);
 			}
 			for (auto& [nodeId, out_edges]: edges){
 				for (auto& edge : out_edges){
