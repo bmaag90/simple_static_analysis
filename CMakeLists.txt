@@ -69,3 +69,7 @@ target_link_libraries(app_control_flow_graph
 )
 
 target_compile_features(app_callgraph PRIVATE cxx_std_20)
+
+
+# Include test configuration
+add_subdirectory(test)
