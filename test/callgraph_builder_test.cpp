@@ -38,3 +38,28 @@ TEST_F(CallGraphBuilderTest, SingleFunction) {
     EXPECT_EQ(graph.getNodesById().size(), 2);
     EXPECT_EQ(graph.getEdges().size(), 1);
 }
+
+// Test: Recursive calls (fibonacci)
+TEST_F(CallGraphBuilderTest, RecursiveCalls) {
+	
+	LLVMIRHandler handler;
+    Callgraph graph;   
+    
+	fs::path path_ir_file = get_fixture_dir() / "recursive_calls.ll";
+	
+	handler.load_module_from_ir_file(path_ir_file.string());
+    CallGraphBuilder builder(handler, graph);
+    builder.build();
+    
+    EXPECT_EQ(graph.getNodesById().size(), 2);
+    // two general edges main -> fib, fib -> fib
+    EXPECT_EQ(graph.getEdges().size(), 2);
+    unsigned int cnt_unique_edges = 0;
+    for (auto& edge : graph.getEdges()){
+		
+		cnt_unique_edges += edge.second.size();
+		
+	}
+	// three unique edges: main -> fib, fib -> fib (call 1), fib -> fib (call 2)
+	EXPECT_EQ(cnt_unique_edges, 3);
+}
