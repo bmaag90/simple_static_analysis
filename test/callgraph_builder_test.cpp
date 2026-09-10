@@ -60,6 +60,28 @@ TEST_F(CallGraphBuilderTest, RecursiveCalls) {
 		cnt_unique_edges += edge.second.size();
 		
 	}
-	// three unique edges: main -> fib, fib -> fib (call 1), fib -> fib (call 2)
+	// three unique edges / callsites: 
+	// main -> fib, fib -> fib (call 1), fib -> fib (call 2)
 	EXPECT_EQ(cnt_unique_edges, 3);
+}
+
+// Test: Nested calls: PID Controller
+TEST_F(CallGraphBuilderTest, NestedCalls) {
+	
+	LLVMIRHandler handler;
+    Callgraph graph;   
+    
+	fs::path path_ir_file = get_fixture_dir() / "pid.ll";
+	
+	handler.load_module_from_ir_file(path_ir_file.string());
+    CallGraphBuilder builder(handler, graph);
+    builder.build();
+    
+    EXPECT_EQ(graph.getNodesById().size(), 10);
+    
+    auto node_id_main = graph.getNodesByName().at("main")->getId();
+    auto& edges_main =  graph.getEdges().at(node_id_main);
+    // main calls PIDController ctor, update and plant (2x)
+    EXPECT_EQ(edges_main.size(), 4);
+    
 }
